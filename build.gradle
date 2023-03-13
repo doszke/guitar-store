@@ -11,6 +11,7 @@ group = 'com.doszke'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
+
 repositories {
 	mavenCentral()
 }
@@ -20,7 +21,9 @@ dependencies {
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	// https://mvnrepository.com/artifact/junit/junit
-	testImplementation("junit:junit:4.13.2")
+	testImplementation("junit:junit:4.13.2")// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
+	implementation("org.springframework.boot:spring-boot-starter-web")
+
 }
 
 tasks.withType(KotlinCompile) {
