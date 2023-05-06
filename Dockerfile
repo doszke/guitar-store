@@ -1,6 +1,5 @@
 FROM openjdk:17-jdk-alpine
-CMD .\gradlew clean build
+ARG JAR_FILE=build/libs/*jar
 MAINTAINER doszke.pl
-COPY build/libs/guitar-store-0.0.1-SNAPSHOT.jar guitar-store.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "guitar-store.jar"]
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
