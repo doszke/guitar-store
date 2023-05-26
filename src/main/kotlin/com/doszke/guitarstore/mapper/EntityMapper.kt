@@ -1,4 +1,9 @@
 package com.doszke.guitarstore.mapper
 
-class EntityMapper {
+
+interface GenericMapper<DTO, DAO> {
+
+    fun dtoToModel(dto: DTO): DAO
+
+    fun modelToDto(model: DAO): DTO
 }

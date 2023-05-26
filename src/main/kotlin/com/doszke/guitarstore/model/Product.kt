@@ -6,19 +6,20 @@ import jakarta.persistence.*
 @Table(name = "products")
 data class Product(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) val id: Long?,
-        @OneToOne val productDetails: ProductDetails?,
-        @ManyToOne(fetch = FetchType.LAZY) val productCategory: ProductCategory?
+        val name: String?,
+        @OneToOne var productDetails: ProductDetails?,
+        @ManyToOne(fetch = FetchType.LAZY) var productCategory: ProductCategory?
 ) {
     @Deprecated("Hiberante-use only")
-    constructor() :this(null, null, null)
+    constructor() :this(null, null, null, null)
 }
 @Entity
 @Table(name = "product_details")
 data class ProductDetails(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) val id: Long?,
-        val description: String,
-        val price: Double,
-        @OneToOne(mappedBy = "productDetails", cascade = [CascadeType.ALL]) val product: Product?
+        val description: String?,
+        val price: Double?,
+        @OneToOne(mappedBy = "productDetails", cascade = [CascadeType.ALL]) var product: Product?
 ) {
     @Deprecated("Hiberante-use only")
     constructor() :this(null, "", .0, null)
@@ -27,18 +28,10 @@ data class ProductDetails(
 @Table(name = "product_categories")
 data class ProductCategory(
         @Id @GeneratedValue(strategy = GenerationType.AUTO)  val id: Long?,
-        val name: String,
-        @OneToMany(mappedBy = "productCategory") val products: List<Product>
+        val name: String?,
+        @OneToMany(mappedBy = "productCategory") var products: MutableList<Product>
 ) {
     @Deprecated("Hiberante-use only")
-    constructor() : this(null, "", emptyList())
+    constructor() : this(null, "", mutableListOf())
 }
 
-@Entity
-data class Test(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO)  val id: Long?,
-        @Column val name: String
-) {
-    @Deprecated("Hiberante-use only")
-    constructor(): this(null, "")
-}
