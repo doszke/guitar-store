@@ -21,6 +21,7 @@ data class ProductDetails(
         val price: Double?,
         @OneToOne(mappedBy = "productDetails", cascade = [CascadeType.ALL]) var product: Product?
 ) {
+
     @Deprecated("Hiberante-use only")
     constructor() :this(null, "", .0, null)
 }

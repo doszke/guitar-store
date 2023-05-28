@@ -4,3 +4,4 @@ import java.lang.Exception
 
 class BadRequestException: Exception()
 class ForbiddenException: Exception()
+class NotFoundException(): Exception()

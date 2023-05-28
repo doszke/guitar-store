@@ -1,5 +1,8 @@
 package com.doszke.guitarstore.service
 
+import com.doszke.guitarstore.exception.BadRequestException
+import com.doszke.guitarstore.exception.NotFoundException
+import com.doszke.guitarstore.model.factory.ProductFactory
 import com.doszke.guitarstore.mapper.ProductCategoryMapper
 import com.doszke.guitarstore.mapper.ProductDetailsMapper
 import com.doszke.guitarstore.mapper.ProductMapper
@@ -21,56 +24,52 @@ class ProductService(
         val productCategoryRepository: ProductCategoryRepository,
         val productMapper: ProductMapper,
         val productDetailsMapper: ProductDetailsMapper,
-        val productCategoryMapper: ProductCategoryMapper
+        val productCategoryMapper: ProductCategoryMapper,
+        val productFactory: ProductFactory
 ) {
 
     fun getProductById(id: Long): Product? {
-        val product = productRepository.findById(id)
-        return product.orElse(null)
+        return productRepository.findById(id).orElseThrow { NotFoundException() }
     }
 
     fun createProduct(received: ProductDTO): Product? {
         val mapped = productMapper.dtoToModel(received)
         if (received.productCategoryId != null) {
-            val category = productCategoryRepository.findById(received.productCategoryId).orElse(null)
-            if (category != null) {
-                if (!category.products.contains(mapped)) {
-                    mapped.productCategory = category
-                    category.products + mapped
+            val category = productCategoryRepository.findById(received.productCategoryId).orElseThrow { BadRequestException() }
+            if (!category.products.contains(mapped)) {
+                mapped.productCategory = category
+                category.products + mapped
 
-                    val saved = productRepository.save(mapped)
-                    productCategoryRepository.save(category)
-                    return saved
-                }
+                val saved = productRepository.save(mapped)
+                productCategoryRepository.save(category)
+                return saved
             }
         }
-        return null
+        throw BadRequestException()
     }
 
-    //...
 
     fun getDetailsForProduct(id: Long): ProductDetails? {
         val product = this.getProductById(id)
-        return product?.productDetails
+        if (product?.productDetails == null) {
+            throw NotFoundException()
+        }
+        return product.productDetails
     }
 
     fun createProductDetails(received: ProductDetailsDTO, productId: Long): ProductDetails? {
-        val product = this.getProductById(productId)
-
-        if (product != null) {
-            if (product.productDetails == null) {
-                val mapped = productDetailsMapper.dtoToModel(received)
-                mapped.product = product
-                product.productDetails = mapped
-
-                val savedD = productDetailsRepository.save(mapped)
-                productRepository.save(product)
-
-                return savedD
-            }
+        val product = this.getProductById(productId) ?: throw NotFoundException()
+        if (product.productDetails != null) {
+            throw BadRequestException()
         }
+        val mapped = productDetailsMapper.dtoToModel(received)
+        mapped.product = product
+        product.productDetails = mapped
 
-        return null
+        val savedD = productDetailsRepository.save(mapped)
+        productRepository.save(product)
+
+        return savedD
     }
 
     fun getCategoryForProduct(id: Long): ProductCategory? {
@@ -83,11 +82,10 @@ class ProductService(
             val searched = productCategoryRepository.findByName(received.name).orElse(null)
             if (searched == null) {
                 val mapped = productCategoryMapper.dtoToModel(received)
-                val saved = productCategoryRepository.save(mapped)
-                return saved
+                return productCategoryRepository.save(mapped)
             }
         }
-        return null
+        throw BadRequestException()
     }
 
     fun getAllProducts(): List<Product> {
@@ -99,29 +97,26 @@ class ProductService(
     }
 
     fun getProductsForCategory(id: Long): List<Product>? {
-        val searched = productCategoryRepository.findById(id).orElse(null)
+        val searched = productCategoryRepository.findById(id).orElseThrow{ NotFoundException() }
         if (searched != null) {
             return searched.products
         }
-        return null
+        throw BadRequestException()
     }
 
     fun modifyProductDetails(productDetailsDTO: ProductDetailsDTO, productId: Long): Any? {
-        val product: Product? = productRepository.findById(productId).orElse(null)
-        if (product != null) {
-
+        val product: Product = productRepository.findById(productId).orElseThrow{ NotFoundException() }
+        if (productId == product.id) {
+            val details: ProductDetails? = product.productDetails
+            if (details != null) {
+                val newDetails = productDetailsMapper.dtoToModel(productDetailsDTO)
+                val modifiedDetails = productFactory.modifyDetails(details, newDetails)
+                productDetailsRepository.save(modifiedDetails)
+                product.productDetails = modifiedDetails
+                productRepository.save(product)
+                return modifiedDetails
+            }
         }
-        return null
+        throw BadRequestException()
     }
-
-    fun productExists(id: Long): Boolean {
-        return !productRepository.findById(id).isEmpty
-    }
-
-    fun productHasDetails(id: Long): Boolean {
-        // to be used after productExists
-        val product: Product = productRepository.findById(id).orElse(null)
-        return product.productDetails != null
-    }
-
 }
